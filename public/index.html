@@ -162,7 +162,7 @@
 
         // Load the gallery images
         async function loadGallery() {
-            const response = await fetch('http://localhost:3000/gallery');
+            const response = await fetch('https://my-website-a9t1.onrender.com/gallery');
             const images = await response.json();
 
             const gallery = document.getElementById('gallery');
@@ -173,7 +173,7 @@
                 div.className = 'image-container';
 
                 const img = document.createElement('img');
-                img.src = `http://localhost:3000/uploads/${image.filename}`;
+                img.src = `https://my-website-a9t1.onrender.com/uploads/${image.filename}`;
                 img.alt = image.filename;
 
                 const buttonContainer = document.createElement('div');
@@ -198,7 +198,7 @@
 
         // Download image function
         async function downloadImage(filename) {
-            const response = await fetch(`http://localhost:3000/download/${filename}`);
+            const response = await fetch(`https://my-website-a9t1.onrender.com/download/${filename}`);
             if (response.ok) {
                 window.location.href = response.url; // Trigger file download
             } else {
@@ -210,7 +210,7 @@
         async function deleteImage(imageId) {
             const confirmDelete = confirm('Are you sure you want to delete this image?');
             if (confirmDelete) {
-                const response = await fetch(`http://localhost:3000/delete/${imageId}`, {
+                const response = await fetch(`https://my-website-a9t1.onrender.com/${imageId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${authToken}`
