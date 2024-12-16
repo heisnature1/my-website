@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heisfreshone Gallery</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        header {
+            background: linear-gradient(to right, blue, black);
+            color: white;
+            padding: 20px;
+            position: relative;
+        }
+        .upload-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: blue;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between; /* Space between images */
+            margin-top: 20px;
+            padding: 0 10px; /* To give some margin to the left and right */
+        }
+        .image-container {
+            width: 23%; /* To fit 4 images per row */
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        img {
+            width: 100%; /* Make sure the image fills the container */
+            height: auto;
+            border-radius: 5px;
+        }
+        .hidden {
+            display: none;
+        }
+        #loginForm, #uploadForm {
+            margin-top: 20px;
+        }
+        .button-container {
+            margin-top: 10px;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Heisfreshone Gallery</h1>
+        <!-- Upload button positioned at the top right corner -->
+        <button class="upload-btn" onclick="showLoginForm()">Upload Image</button>
+    </header>
+
+    <!-- Login form, initially hidden -->
+    <div id="loginForm" class="hidden">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+    </div>
+
+    <!-- Upload form, initially hidden -->
+    <div id="uploadForm" class="hidden">
+        <h2>Upload Image</h2>
+        <input type="file" id="imageInput">
+        <button onclick="uploadImage()">Upload</button>
+    </div>
+
+    <section>
+        <h2></h2>
+        <div class="gallery" id="gallery"></div>
+    </section>
+
+    <script>
+        let isLoggedIn = false;
+        let authToken = null;
+
+        // Show the login form when the "Upload" button is clicked
+        function showLoginForm() {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('uploadForm').classList.add('hidden');
+        }
+
+        // Login function
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch('http://localhost:3000/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                authToken = data.token;
+                isLoggedIn = true;
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('uploadForm').classList.remove('hidden');
+                alert('Login successful!');
+            } else {
+                alert('Invalid credentials');
+            }
+        }
+
+        // Upload image function
+        async function uploadImage() {
+            if (!isLoggedIn) {
+                alert('Please log in first!');
+                return;
+            }
+
+            const imageInput = document.getElementById('imageInput');
+            if (!imageInput.files[0]) {
+                alert('Please select an image!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', imageInput.files[0]);
+
+            const response = await fetch('http://localhost:3000/upload', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: formData
+            });
+
+            if (response.ok) {
+                alert('Image uploaded successfully!');
+                loadGallery();
+            } else {
+                alert('Failed to upload image');
+            }
+        }
+
+        // Load the gallery images
+        async function loadGallery() {
+            const response = await fetch('http://localhost:3000/gallery');
+            const images = await response.json();
+
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+
+            images.forEach(image => {
+                const div = document.createElement('div');
+                div.className = 'image-container';
+
+                const img = document.createElement('img');
+                img.src = `http://localhost:3000/uploads/${image.filename}`;
+                img.alt = image.filename;
+
+                const buttonContainer = document.createElement('div');
+                buttonContainer.className = 'button-container';
+
+                const downloadButton = document.createElement('button');
+                downloadButton.textContent = 'Download';
+                downloadButton.onclick = () => downloadImage(image.filename);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.onclick = () => deleteImage(image.id);
+
+                buttonContainer.appendChild(downloadButton);
+                buttonContainer.appendChild(deleteButton);
+
+                div.appendChild(img);
+                div.appendChild(buttonContainer);
+                gallery.appendChild(div);
+            });
+        }
+
+        // Download image function
+        async function downloadImage(filename) {
+            const response = await fetch(`http://localhost:3000/download/${filename}`);
+            if (response.ok) {
+                window.location.href = response.url; // Trigger file download
+            } else {
+                alert('Failed to download image');
+            }
+        }
+
+        // Delete image function
+        async function deleteImage(imageId) {
+            const confirmDelete = confirm('Are you sure you want to delete this image?');
+            if (confirmDelete) {
+                const response = await fetch(`http://localhost:3000/delete/${imageId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Image deleted successfully!');
+                    loadGallery();
+                } else {
+                    alert('Failed to delete image');
+                }
+            }
+        }
+
+        // Load gallery when the page loads
+        loadGallery();
+    </script>
+</body>
+</html>
