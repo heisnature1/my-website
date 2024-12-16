@@ -162,5 +162,5 @@ app.delete('/delete/:id', verifyToken, (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Server is running on https://my-website-a9t1.onrender.com`);
 });
