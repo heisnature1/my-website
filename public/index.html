@@ -144,7 +144,7 @@
             const formData = new FormData();
             formData.append('image', imageInput.files[0]);
 
-            const response = await fetch('http://localhost:3000/upload', {
+            const response = await fetch('https://my-website-a9t1.onrender.com/upload', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${authToken}`
